@@ -1,0 +1,16 @@
+{
+  "name": "appam-formulaire",
+  "version": "1.0.0",
+  "description": "Formulaire de validation + tableau de bord pour l'app des petites entrepreneuses",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.34.3",
+    "express": "^4.19.2"
+  }
+}

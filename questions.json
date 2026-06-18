@@ -1,0 +1,342 @@
+{
+  "title": "Aide-moi à créer un outil pour les petites entrepreneuses 🚀",
+  "subtitle": "3-4 minutes pour partager ton expérience. Les premières participantes auront un accès gratuit à l'app + un petit cadeau 🎁",
+  "sections": {
+    "1": "Ton activité",
+    "2": "Volume & économie",
+    "3": "Comment tu travailles aujourd'hui",
+    "4": "Tes vraies galères 🔥",
+    "5": "Tes clientes",
+    "6": "Les fonctionnalités qui t'aideraient",
+    "7": "Prix & contact"
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "section": "1",
+      "type": "text",
+      "label": "Comment tu t'appelles ?",
+      "help": "Facultatif",
+      "required": false
+    },
+    {
+      "id": "q2",
+      "section": "1",
+      "type": "single",
+      "label": "Tu vends ou tu proposes quoi principalement ?",
+      "required": true,
+      "other": true,
+      "options": [
+        "🥞 Nourriture préparée (crêpes, gaufres, plats…)",
+        "🥤 Boissons (jus, smoothies, pauses fruitées…)",
+        "💄 Cosmétique, maquillage, parfums",
+        "💎 Bijoux, bracelets, accessoires faits main",
+        "👗 Vêtements, pagnes, mode",
+        "📦 Articles importés / revente / dropshipping",
+        "🧴 Savons, produits naturels, bien-être",
+        "💅 Services à domicile (coiffure, maquillage, manucure…)"
+      ]
+    },
+    {
+      "id": "q3",
+      "section": "1",
+      "type": "single",
+      "label": "Depuis combien de temps tu fais cette activité ?",
+      "required": false,
+      "options": [
+        "Moins de 6 mois",
+        "6 mois à 1 an",
+        "1 à 3 ans",
+        "Plus de 3 ans"
+      ]
+    },
+    {
+      "id": "q4",
+      "section": "1",
+      "type": "single",
+      "label": "Tu y consacres combien de temps ?",
+      "required": false,
+      "options": [
+        "C'est mon activité principale (plein temps)",
+        "À mi-temps en plus de mes études / mon boulot",
+        "C'est une activité ponctuelle / week-end"
+      ]
+    },
+    {
+      "id": "q5",
+      "section": "1",
+      "type": "single",
+      "label": "Tu travailles seule ou avec de l'aide ?",
+      "required": false,
+      "options": [
+        "Toute seule",
+        "Avec une apprentie / une aide",
+        "Avec plusieurs personnes (équipe)",
+        "En association avec une amie / sœur"
+      ]
+    },
+    {
+      "id": "q6",
+      "section": "2",
+      "type": "single",
+      "label": "Combien de commandes ou de ventes par semaine en moyenne ?",
+      "required": false,
+      "options": [
+        "Moins de 10",
+        "10 à 30",
+        "30 à 60",
+        "60 à 100",
+        "Plus de 100"
+      ]
+    },
+    {
+      "id": "q7",
+      "section": "2",
+      "type": "single",
+      "label": "Combien de produits / références différentes dans ton catalogue ?",
+      "required": false,
+      "options": [
+        "1 à 5",
+        "6 à 15",
+        "16 à 30",
+        "Plus de 30"
+      ]
+    },
+    {
+      "id": "q8",
+      "section": "2",
+      "type": "single",
+      "label": "Ton chiffre d'affaires moyen par semaine se situe plutôt vers ?",
+      "help": "Confidentiel — sers à comprendre la taille des activités",
+      "required": false,
+      "options": [
+        "Moins de 10 000 FCFA",
+        "10 000 à 30 000 FCFA",
+        "30 000 à 60 000 FCFA",
+        "60 000 à 100 000 FCFA",
+        "Plus de 100 000 FCFA",
+        "Je préfère ne pas répondre"
+      ]
+    },
+    {
+      "id": "q9",
+      "section": "3",
+      "type": "multi",
+      "label": "Tu vends où / comment ?",
+      "help": "Plusieurs réponses possibles",
+      "required": false,
+      "options": [
+        "À domicile / depuis chez moi",
+        "Stand fixe ou boutique",
+        "Livraison à mes clientes",
+        "Marché / événements ponctuels",
+        "Uniquement en ligne (Instagram, WhatsApp…)"
+      ]
+    },
+    {
+      "id": "q10",
+      "section": "3",
+      "type": "multi",
+      "label": "Comment tes clientes te trouvent principalement ?",
+      "required": false,
+      "other": true,
+      "options": [
+        "Bouche à oreille / recommandation",
+        "Statut WhatsApp",
+        "Instagram",
+        "Facebook / TikTok",
+        "Bannière / affiche / passage devant mon stand"
+      ]
+    },
+    {
+      "id": "q11",
+      "section": "3",
+      "type": "multi",
+      "label": "Comment tu partages ton catalogue / menu à tes clientes ?",
+      "required": false,
+      "options": [
+        "Photo dans le statut WhatsApp",
+        "Message texte sur WhatsApp",
+        "Catalogue papier / flyer",
+        "Bouche à oreille / oralement",
+        "Compte Instagram",
+        "Je n'ai pas vraiment de catalogue organisé"
+      ]
+    },
+    {
+      "id": "q12",
+      "section": "3",
+      "type": "multi",
+      "label": "Comment tu reçois les commandes ?",
+      "required": false,
+      "other": true,
+      "options": [
+        "WhatsApp (messages texte)",
+        "WhatsApp (note vocale)",
+        "Appel téléphonique",
+        "En personne au stand / à domicile",
+        "Instagram DM"
+      ]
+    },
+    {
+      "id": "q13",
+      "section": "3",
+      "type": "single",
+      "label": "Comment tu suis tes ventes et tes recettes ?",
+      "required": false,
+      "other": true,
+      "options": [
+        "Dans un cahier",
+        "Dans ma tête",
+        "Sur Excel ou une autre app",
+        "Je ne les suis pas vraiment"
+      ]
+    },
+    {
+      "id": "q14",
+      "section": "4",
+      "type": "textarea",
+      "label": "🔥 Qu'est-ce qui te fait perdre le plus de temps OU d'argent chaque semaine ?",
+      "help": "Sois honnête, tes réponses ici nous aident énormément ❤️",
+      "required": true
+    },
+    {
+      "id": "q15",
+      "section": "4",
+      "type": "multi",
+      "label": "Il t'arrive de…",
+      "help": "Coche tout ce qui te concerne",
+      "required": false,
+      "options": [
+        "Oublier une commande ou me tromper dedans",
+        "Ne pas savoir si une cliente m'a payée ou pas",
+        "Mélanger les commandes pendant les jours chargés",
+        "Perdre une cliente régulière sans comprendre pourquoi",
+        "Passer des heures à répondre aux mêmes questions sur WhatsApp",
+        "Refaire à chaque fois le visuel du menu sur Canva ou autre",
+        "Ne pas savoir combien j'ai vraiment gagné dans le mois",
+        "Me demander quels produits sont vraiment rentables",
+        "Aucun de ces problèmes"
+      ]
+    },
+    {
+      "id": "q16",
+      "section": "4",
+      "type": "textarea",
+      "label": "Si tu pouvais résoudre UNE SEULE chose magiquement dans ton business, ce serait quoi ?",
+      "required": false
+    },
+    {
+      "id": "q17",
+      "section": "5",
+      "type": "single",
+      "label": "Combien de clientes régulières tu estimes avoir ?",
+      "required": false,
+      "options": [
+        "Moins de 10",
+        "10 à 30",
+        "30 à 60",
+        "Plus de 60",
+        "Je ne sais pas vraiment"
+      ]
+    },
+    {
+      "id": "q18",
+      "section": "5",
+      "type": "multi",
+      "label": "Comment tes clientes te paient le plus souvent ?",
+      "required": false,
+      "options": [
+        "Cash à la livraison / au retrait",
+        "T-Money",
+        "Mixx by Yas (ex-Flooz)",
+        "Virement bancaire",
+        "Crédit (« je te paie plus tard »)"
+      ]
+    },
+    {
+      "id": "q19",
+      "section": "6",
+      "type": "multi",
+      "label": "Quelles fonctionnalités te seraient vraiment utiles ?",
+      "help": "Coche jusqu'à 5",
+      "required": false,
+      "maxSelect": 5,
+      "options": [
+        "📸 Catalogue avec photos et prix de mes produits",
+        "🔗 Lien partageable de mon menu pour WhatsApp",
+        "📋 Gestion des commandes du jour",
+        "👥 Carnet de mes clientes avec historique",
+        "💰 Suivi des paiements (qui m'a payée, qui me doit)",
+        "📊 Caisse du jour automatique",
+        "📢 Diffusion du menu à toutes mes clientes en 1 clic",
+        "🔔 Rappels automatiques aux clientes qui me doivent",
+        "🎨 Génération de visuels jolis pour mon statut",
+        "⭐ Carte de fidélité numérique (10 achetés = 1 offert)",
+        "📈 Statistiques de vente (mes produits qui marchent)",
+        "📑 Fiche de revenus mensuelle exportable",
+        "👤 Compte employée pour mon apprentie",
+        "🤖 Bot WhatsApp qui répond aux questions des clientes"
+      ]
+    },
+    {
+      "id": "q20",
+      "section": "6",
+      "type": "single",
+      "label": "Si une appli te permettait de gérer ton catalogue, recevoir tes commandes, suivre tes paiements et partager ton menu en 1 lien WhatsApp… tu l'installerais ?",
+      "required": false,
+      "options": [
+        "Oui, tout de suite",
+        "Oui mais je voudrais voir d'abord à quoi ça ressemble",
+        "Pas sûre, ça dépend du prix",
+        "Non, je n'en ai pas besoin"
+      ]
+    },
+    {
+      "id": "q21",
+      "section": "7",
+      "type": "single",
+      "label": "Tu paierais combien par mois pour une appli avec toutes les fonctions cochées plus haut ?",
+      "required": false,
+      "options": [
+        "Rien, je veux du 100% gratuit",
+        "500 à 1 000 FCFA",
+        "1 000 à 2 500 FCFA",
+        "2 500 à 5 000 FCFA",
+        "Plus de 5 000 FCFA"
+      ]
+    },
+    {
+      "id": "q22",
+      "section": "7",
+      "type": "single",
+      "label": "Tu veux être parmi les premières à tester l'appli gratuitement ?",
+      "required": false,
+      "options": [
+        "Oui, préviens-moi !",
+        "Non, j'ai juste répondu au sondage"
+      ]
+    },
+    {
+      "id": "q22b",
+      "section": "7",
+      "type": "text",
+      "label": "Ton numéro WhatsApp 👇",
+      "help": "Pour te contacter quand l'app sera prête",
+      "required": false,
+      "showIf": { "q": "q22", "value": "Oui, préviens-moi !" }
+    },
+    {
+      "id": "q23",
+      "section": "7",
+      "type": "single",
+      "label": "Bonus : tu serais prête à payer 1 500 FCFA aujourd'hui pour réserver ton accès prioritaire + 2 mois Pro offerts au lancement ?",
+      "required": false,
+      "options": [
+        "Oui (avec un lien Mobile Money)",
+        "Pas maintenant, peut-être plus tard",
+        "Non"
+      ]
+    }
+  ]
+}

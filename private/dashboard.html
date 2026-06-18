@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de bord · AppAM</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --violet: #7c3aed; --pink: #ec4899; --ink: #1f2937; --muted: #6b7280;
+      --line: #e5e7eb; --bg: #f6f7fb; --card: #fff; --ok: #16a34a;
+      --radius: 14px; --shadow: 0 4px 18px rgba(17,24,39,.06);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--ink); line-height: 1.5;
+    }
+    .topbar {
+      background: linear-gradient(90deg, var(--violet), var(--pink));
+      color: #fff; padding: 18px 20px; position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .topbar h1 { font-size: 19px; }
+    .topbar .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.4);
+      padding: 8px 14px; border-radius: 10px; font-size: 14px; font-weight: 600;
+      cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn:hover { background: rgba(255,255,255,.3); }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 22px 16px 60px; }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 14px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 18px 20px;
+    }
+    .card .kpi { font-size: 30px; font-weight: 800; color: var(--violet); }
+    .card .kpi-label { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .card .kpi-sub { font-size: 12px; color: var(--ok); margin-top: 6px; font-weight: 600; }
+
+    h2.sec-title { margin: 34px 0 14px; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    h2.sec-title::before { content: ''; width: 5px; height: 20px; background: var(--violet); border-radius: 3px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px,1fr)); gap: 16px; }
+    .panel {
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 18px;
+    }
+    .panel h3 { font-size: 15px; margin-bottom: 14px; }
+    .chart-box { position: relative; height: 260px; }
+
+    .verbatims { display: flex; flex-direction: column; gap: 10px; max-height: 460px; overflow-y: auto; }
+    .verbatim {
+      background: #faf9ff; border-left: 3px solid var(--violet); border-radius: 8px;
+      padding: 10px 12px; font-size: 14px;
+    }
+    .verbatim .meta { color: var(--muted); font-size: 11px; margin-top: 6px; }
+    .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 30px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+    td.wa a { color: var(--violet); font-weight: 600; text-decoration: none; }
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .pill.green { background: #dcfce7; color: #15803d; }
+    .pill.gray { background: #f3f4f6; color: #6b7280; }
+
+    .loading { text-align: center; padding: 60px; color: var(--muted); }
+    .table-scroll { overflow-x: auto; }
+    @media (max-width: 600px) { .topbar h1 { font-size: 16px; } }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>📊 Tableau de bord — Réponses</h1>
+    <div class="actions">
+      <button class="btn" onclick="location.reload()">🔄 Rafraîchir</button>
+      <a class="btn" href="/api/export.csv">⬇️ Export Excel (CSV)</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div id="content" class="loading">Chargement des données…</div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    const PALETTE = ['#7c3aed','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#14b8a6','#f97316','#06b6d4','#a855f7','#84cc16','#e11d48','#0ea5e9'];
+    let charts = [];
+
+    Promise.all([
+      fetch('/api/questions').then(r => r.json()),
+      fetch('/api/responses').then(r => r.json())
+    ]).then(([schema, responses]) => render(schema, responses))
+      .catch(() => {
+        document.getElementById('content').innerHTML =
+          '<div class="empty">Erreur de chargement. Recharge la page.</div>';
+      });
+
+    function render(schema, responses) {
+      const root = document.getElementById('content');
+      root.classList.remove('loading');
+
+      if (!responses.length) {
+        root.innerHTML = '<div class="panel"><div class="empty">Aucune réponse pour le moment.<br>Partage ton formulaire et reviens ici 😊</div></div>';
+        return;
+      }
+
+      const byId = {};
+      schema.questions.forEach(q => byId[q.id] = q);
+
+      root.innerHTML =
+        kpiSection(schema, responses) +
+        '<h2 class="sec-title">Les galères (verbatims) 🔥</h2><div class="grid" id="verbatimGrid"></div>' +
+        '<h2 class="sec-title">Beta-testeuses & intentions 💜</h2><div id="betaPanel"></div>' +
+        '<h2 class="sec-title">Toutes les réponses chiffrées</h2><div class="grid" id="chartGrid"></div>';
+
+      renderVerbatims(schema, responses);
+      renderBeta(responses);
+      renderCharts(schema, responses, byId);
+    }
+
+    /* ---------- KPIs ---------- */
+    function kpiSection(schema, responses) {
+      const total = responses.length;
+      const install = responses.filter(r => {
+        const v = r.answers.q20;
+        return v && v.indexOf('Oui') === 0;
+      }).length;
+      const beta = responses.filter(r => r.answers.q22 && r.answers.q22.indexOf('Oui') === 0).length;
+      const prepay = responses.filter(r => r.answers.q23 && r.answers.q23.indexOf('Oui') === 0).length;
+      const willPay = responses.filter(r => r.answers.q21 && r.answers.q21.indexOf('Rien') !== 0).length;
+
+      const pct = (n) => total ? Math.round(n / total * 100) : 0;
+      const card = (kpi, label, sub) =>
+        '<div class="card"><div class="kpi">' + kpi + '</div><div class="kpi-label">' + label + '</div>' +
+        (sub ? '<div class="kpi-sub">' + sub + '</div>' : '') + '</div>';
+
+      return '<div class="cards">' +
+        card(total, 'Réponses totales', '') +
+        card(install, 'Prêtes à installer', pct(install) + '% des réponses') +
+        card(willPay, 'Prêtes à payer', pct(willPay) + '% des réponses') +
+        card(beta, 'Beta-testeuses', 'avec numéro WhatsApp') +
+        card(prepay, 'Prêtes à pré-payer', '1 500 FCFA (vraie intention)') +
+        '</div>';
+    }
+
+    /* ---------- Verbatims (Q14, Q16) ---------- */
+    function renderVerbatims(schema, responses) {
+      const grid = document.getElementById('verbatimGrid');
+      schema.questions.filter(q => q.type === 'textarea').forEach(q => {
+        const items = responses
+          .filter(r => r.answers[q.id])
+          .map(r => ({ text: r.answers[q.id], date: r.createdAt, who: r.answers.q1 }));
+        let inner = '<div class="panel"><h3>' + esc(q.label) + ' (' + items.length + ')</h3>';
+        if (!items.length) inner += '<div class="empty">Aucune réponse écrite.</div>';
+        else {
+          inner += '<div class="verbatims">';
+          items.reverse().forEach(it => {
+            inner += '<div class="verbatim">' + esc(it.text) +
+              '<div class="meta">' + (it.who ? esc(it.who) + ' · ' : '') +
+              new Date(it.date).toLocaleDateString('fr-FR') + '</div></div>';
+          });
+          inner += '</div>';
+        }
+        inner += '</div>';
+        grid.insertAdjacentHTML('beforeend', inner);
+      });
+    }
+
+    /* ---------- Beta-testeuses ---------- */
+    function renderBeta(responses) {
+      const panel = document.getElementById('betaPanel');
+      const rows = responses
+        .filter(r => r.answers.q22 && r.answers.q22.indexOf('Oui') === 0)
+        .map(r => ({
+          name: r.answers.q1 || '—',
+          wa: r.answers.q22b || '',
+          activity: r.answers.q2 || '—',
+          pay: r.answers.q21 || '—',
+          prepay: r.answers.q23 && r.answers.q23.indexOf('Oui') === 0,
+          date: r.createdAt
+        })).reverse();
+
+      if (!rows.length) {
+        panel.innerHTML = '<div class="panel"><div class="empty">Aucune beta-testeuse inscrite pour l\'instant.</div></div>';
+        return;
+      }
+      let html = '<div class="panel"><div class="table-scroll"><table><thead><tr>' +
+        '<th>Nom</th><th>WhatsApp</th><th>Activité</th><th>Budget/mois</th><th>Pré-paie ?</th><th>Date</th>' +
+        '</tr></thead><tbody>';
+      rows.forEach(r => {
+        const waLink = r.wa ? '<a href="https://wa.me/' + r.wa.replace(/[^0-9]/g,'') + '" target="_blank">' + esc(r.wa) + '</a>' : '—';
+        html += '<tr><td>' + esc(r.name) + '</td><td class="wa">' + waLink + '</td><td>' + esc(r.activity) +
+          '</td><td>' + esc(r.pay) + '</td><td>' +
+          (r.prepay ? '<span class="pill green">Oui 🔥</span>' : '<span class="pill gray">—</span>') +
+          '</td><td>' + new Date(r.date).toLocaleDateString('fr-FR') + '</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
+      panel.innerHTML = html;
+    }
+
+    /* ---------- Graphiques ---------- */
+    function renderCharts(schema, responses, byId) {
+      const grid = document.getElementById('chartGrid');
+      charts.forEach(c => c.destroy());
+      charts = [];
+
+      schema.questions.filter(q => q.type === 'single' || q.type === 'multi').forEach((q, i) => {
+        const counts = {};
+        q.options.forEach(o => counts[o] = 0);
+        let otherCount = 0;
+        responses.forEach(r => {
+          const v = r.answers[q.id];
+          if (!v) return;
+          const arr = Array.isArray(v) ? v : [v];
+          arr.forEach(val => {
+            if (val === 'Autre') otherCount++;
+            else if (counts[val] !== undefined) counts[val]++;
+            else counts[val] = (counts[val] || 0) + 1;
+          });
+        });
+        if (otherCount) counts['Autre'] = otherCount;
+
+        const labels = Object.keys(counts);
+        const data = labels.map(l => counts[l]);
+        if (!data.some(d => d > 0)) return;
+
+        const panel = document.createElement('div');
+        panel.className = 'panel';
+        panel.innerHTML = '<h3>' + esc(q.label) + '</h3><div class="chart-box"><canvas></canvas></div>';
+        grid.appendChild(panel);
+
+        const ctx = panel.querySelector('canvas');
+        const isPie = q.type === 'single' && labels.length <= 6;
+        const chart = new Chart(ctx, {
+          type: isPie ? 'doughnut' : 'bar',
+          data: {
+            labels: labels.map(shorten),
+            datasets: [{
+              data: data,
+              backgroundColor: labels.map((_, k) => PALETTE[k % PALETTE.length]),
+              borderRadius: 6,
+            }]
+          },
+          options: {
+            indexAxis: isPie ? 'x' : 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: isPie, position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+              tooltip: { callbacks: { title: (t) => labels[t[0].dataIndex] } }
+            },
+            scales: isPie ? {} : { x: { beginAtZero: true, ticks: { precision: 0 } } }
+          }
+        });
+        charts.push(chart);
+      });
+    }
+
+    function shorten(s) {
+      s = String(s);
+      return s.length > 32 ? s.slice(0, 30) + '…' : s;
+    }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+  })();
+  </script>
+</body>
+</html>

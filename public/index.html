@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#7c3aed" />
+  <title>Aide-moi à créer un outil 🚀</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <div class="hero-badge">Sondage · 3-4 min</div>
+      <h1 id="form-title">Chargement…</h1>
+      <p id="form-subtitle" class="subtitle"></p>
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+    </header>
+
+    <form id="surveyForm" novalidate>
+      <div id="sections"></div>
+
+      <div id="formError" class="form-error" hidden></div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        Envoyer mes réponses 🚀
+      </button>
+      <p class="privacy">Tes réponses sont confidentielles et servent uniquement à améliorer l'app.</p>
+    </form>
+
+    <section id="successScreen" class="success" hidden>
+      <div class="success-emoji">🎉</div>
+      <h2>Merci infiniment !</h2>
+      <p>Ta réponse a bien été enregistrée. Tu fais désormais partie de l'aventure 💜</p>
+      <button class="submit-btn" onclick="location.reload()">Répondre à nouveau</button>
+    </section>
+
+    <footer class="foot">Fait avec ❤️ pour les petites entrepreneuses</footer>
+  </main>
+
+  <script src="form.js"></script>
+</body>
+</html>
