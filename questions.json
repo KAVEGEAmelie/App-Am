@@ -248,8 +248,8 @@
       "required": false,
       "options": [
         "Cash à la livraison / au retrait",
-        "T-Money",
-        "Mixx by Yas (ex-Flooz)",
+        "Mixx by Yas (ex T-Money)",
+        "Moov Money (ex Flooz)",
         "Virement bancaire",
         "Crédit (« je te paie plus tard »)"
       ]
