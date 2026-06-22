@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 
@@ -16,13 +17,19 @@ const questions = JSON.parse(
 
 /* =========================================================================
    STOCKAGE
-   - En production (Vercel) : Upstash Redis si les variables sont présentes.
-   - En local (ton ordi)    : repli automatique sur un fichier JSON.
+   - Si des variables Upstash/KV Redis sont présentes (Vercel) : Redis.
+   - Sinon (ton ordi) : repli sur un fichier JSON. Sur un disque en lecture
+     seule (Vercel sans Redis), on bascule sur le dossier temporaire /tmp
+     pour ne JAMAIS planter au démarrage.
    ========================================================================= */
 const REDIS_URL =
-  process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  process.env.UPSTASH_REDIS_REST_URL ||
+  process.env.KV_REST_API_URL ||
+  process.env.REDIS_REST_API_URL;
 const REDIS_TOKEN =
-  process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+  process.env.UPSTASH_REDIS_REST_TOKEN ||
+  process.env.KV_REST_API_TOKEN ||
+  process.env.REDIS_REST_API_TOKEN;
 
 const REDIS_KEY = 'appam:responses';
 let storage;
@@ -43,14 +50,26 @@ if (REDIS_URL && REDIS_TOKEN) {
     },
   };
 } else {
-  // ----- Mode fichier local -----
-  const DATA_DIR = path.join(__dirname, 'data');
+  // ----- Mode fichier (incassable) -----
+  let DATA_DIR = path.join(__dirname, 'data');
+  // Sur Vercel, le dossier de l'app est en lecture seule -> utiliser /tmp.
+  if (process.env.VERCEL) DATA_DIR = path.join(os.tmpdir(), 'appam-data');
   const DATA_FILE = path.join(DATA_DIR, 'responses.json');
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]');
+
+  function ensureFile() {
+    try {
+      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+      if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]');
+      return true;
+    } catch (e) {
+      console.error('Stockage fichier indisponible :', e.message);
+      return false;
+    }
+  }
+  ensureFile();
 
   storage = {
-    mode: 'fichier',
+    mode: process.env.VERCEL ? 'fichier-temporaire (⚠️ non persistant)' : 'fichier',
     async read() {
       try {
         return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -59,6 +78,7 @@ if (REDIS_URL && REDIS_TOKEN) {
       }
     },
     async add(entry) {
+      if (!ensureFile()) throw new Error('Stockage indisponible');
       const all = await this.read();
       all.push(entry);
       fs.writeFileSync(DATA_FILE, JSON.stringify(all, null, 2));
@@ -130,6 +150,15 @@ function auth(req, res, next) {
   res.set('WWW-Authenticate', 'Basic realm="Tableau de bord AppAM"');
   res.status(401).send('Authentification requise.');
 }
+
+// --- Diagnostic protégé (pour vérifier le mode de stockage) ---
+app.get('/api/health', auth, (req, res) => {
+  res.json({
+    storageMode: storage.mode,
+    redisDetected: Boolean(REDIS_URL && REDIS_TOKEN),
+    onVercel: Boolean(process.env.VERCEL),
+  });
+});
 
 // --- Tableau de bord protégé ---
 app.get('/dashboard', auth, (req, res) =>
