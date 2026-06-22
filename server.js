@@ -8,8 +8,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // --- Identifiants du tableau de bord (à changer via variables d'environnement) ---
-const DASHBOARD_USER = process.env.DASHBOARD_USER || 'admin';
-const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || 'change-moi-2026';
+const DASHBOARD_USER = process.env.DASHBOARD_USER || 'amelie';
+const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || '@amelie021';
 
 const questions = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'questions.json'), 'utf8')
