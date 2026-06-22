@@ -48,6 +48,17 @@ if (REDIS_URL && REDIS_TOKEN) {
     async add(entry) {
       await redis.rpush(REDIS_KEY, JSON.stringify(entry));
     },
+    async remove(id) {
+      const all = await this.read();
+      const kept = all.filter((e) => e.id !== id);
+      // Réécrit la liste complète (simple et fiable pour ce volume).
+      const tmp = REDIS_KEY + ':tmp';
+      await redis.del(tmp);
+      if (kept.length) await redis.rpush(tmp, ...kept.map((e) => JSON.stringify(e)));
+      await redis.del(REDIS_KEY);
+      if (kept.length) await redis.rename(tmp, REDIS_KEY);
+      return all.length !== kept.length;
+    },
   };
 } else {
   // ----- Mode fichier (incassable) -----
@@ -82,6 +93,12 @@ if (REDIS_URL && REDIS_TOKEN) {
       const all = await this.read();
       all.push(entry);
       fs.writeFileSync(DATA_FILE, JSON.stringify(all, null, 2));
+    },
+    async remove(id) {
+      const all = await this.read();
+      const kept = all.filter((e) => e.id !== id);
+      fs.writeFileSync(DATA_FILE, JSON.stringify(kept, null, 2));
+      return all.length !== kept.length;
     },
   };
 }
@@ -170,6 +187,18 @@ app.get('/api/responses', auth, async (req, res) => {
     res.json(await storage.read());
   } catch (err) {
     console.error('Erreur lecture :', err);
+    res.status(500).json({ error: 'Erreur serveur.' });
+  }
+});
+
+// --- Supprimer une réponse (protégé) ---
+app.delete('/api/responses/:id', auth, async (req, res) => {
+  try {
+    const removed = await storage.remove(req.params.id);
+    if (!removed) return res.status(404).json({ error: 'Réponse introuvable.' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Erreur suppression :', err);
     res.status(500).json({ error: 'Erreur serveur.' });
   }
 });

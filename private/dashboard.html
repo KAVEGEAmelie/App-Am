@@ -39,6 +39,20 @@
     .kpi .l { font-size: 12px; color: var(--muted); margin-top: 4px; }
     @media (max-width: 560px) { .kpis { grid-template-columns: repeat(2,1fr); } .kpi .n { font-size: 22px; } }
 
+    /* Objectif */
+    .goal {
+      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 16px 18px; margin-top: 12px;
+    }
+    .goal-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+    .goal-title { font-weight: 800; font-size: 15px; }
+    .goal-count { font-size: 14px; color: var(--muted); font-weight: 700; }
+    .goal-count b { color: var(--violet); font-size: 18px; }
+    .goal-track { height: 16px; background: #f0eefb; border-radius: 999px; overflow: hidden; }
+    .goal-fill { height: 100%; background: linear-gradient(90deg, var(--violet), var(--pink)); border-radius: 999px; transition: width .5s; min-width: 2px; }
+    .goal-left { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+    .goal-done { color: var(--ok); font-weight: 700; }
+
     .tabs { display: flex; gap: 8px; margin: 20px 0 14px; }
     .tab {
       flex: 1; text-align: center; padding: 12px; border-radius: 12px; cursor: pointer;
@@ -63,6 +77,12 @@
     }
     .resp-name { font-size: 17px; font-weight: 800; }
     .resp-date { font-size: 12px; color: var(--muted); }
+    .resp-head-right { display: flex; align-items: center; gap: 10px; }
+    .del-btn {
+      background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
+      border-radius: 8px; padding: 5px 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .del-btn:hover { background: #fee2e2; }
     .resp-activity {
       display: inline-block; background: #fdeef6; color: var(--pink);
       font-weight: 700; font-size: 13px; padding: 3px 10px; border-radius: 999px; margin-bottom: 10px;
@@ -117,6 +137,7 @@
   (function () {
     'use strict';
     let SCHEMA = null, RESPONSES = [], byId = {};
+    const GOAL = 100;
 
     Promise.all([
       fetch('/api/questions').then(r => r.json()),
@@ -144,6 +165,7 @@
 
       root.innerHTML =
         kpis() +
+        goalBanner() +
         '<div class="tabs">' +
           '<div class="tab active" data-tab="list">📋 Réponses (' + RESPONSES.length + ')</div>' +
           '<div class="tab" data-tab="summary">📊 Résumé</div>' +
@@ -189,6 +211,25 @@
         '</div>';
     }
 
+    function goalBanner() {
+      const total = RESPONSES.length;
+      const pct = Math.min(100, Math.round(total / GOAL * 100));
+      const reached = total >= GOAL;
+      const left = Math.max(0, GOAL - total);
+      return '<div class="goal">' +
+        '<div class="goal-top">' +
+          '<span class="goal-title">🎯 Objectif : ' + GOAL + ' retours</span>' +
+          '<span class="goal-count"><b>' + total + '</b> / ' + GOAL + '</span>' +
+        '</div>' +
+        '<div class="goal-track"><div class="goal-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="goal-left">' +
+          (reached
+            ? '<span class="goal-done">🎉 Objectif atteint ! Bravo à toi 💜</span>'
+            : 'Encore <b>' + left + '</b> réponse' + (left > 1 ? 's' : '') + ' pour atteindre ton objectif — ' + pct + '% fait') +
+        '</div>' +
+      '</div>';
+    }
+
     function buildList(list) {
       const view = document.getElementById('listView');
       if (!list.length) { view.innerHTML = '<div class="empty">Aucun résultat pour cette recherche.</div>'; return; }
@@ -201,7 +242,11 @@
 
         let html = '<div class="resp"><div class="resp-head">' +
           '<span class="resp-name">' + esc(name) + '</span>' +
-          '<span class="resp-date">' + date + '</span></div>';
+          '<span class="resp-head-right">' +
+            '<span class="resp-date">' + date + '</span>' +
+            '<button class="del-btn" data-del="' + esc(r.id) + '" data-name="' + esc(name) + '">🗑️</button>' +
+          '</span>' +
+        '</div>';
         if (activity) html += '<span class="resp-activity">' + esc(activity) + '</span>';
 
         ['q14','q16'].forEach(qid => {
@@ -222,6 +267,22 @@
         html += '</div>';
         return html;
       }).join('');
+
+      view.querySelectorAll('.del-btn').forEach(b => {
+        b.onclick = () => deleteResponse(b.dataset.del, b.dataset.name);
+      });
+    }
+
+    function deleteResponse(id, name) {
+      if (!confirm('Supprimer la réponse de ' + (name || 'cette personne') + ' ?\nCette action est définitive.')) return;
+      fetch('/api/responses/' + encodeURIComponent(id), { method: 'DELETE' })
+        .then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+          if (!ok) throw new Error(d.error || 'Erreur');
+          RESPONSES = RESPONSES.filter(x => x.id !== id);
+          render();
+        })
+        .catch(err => alert('Suppression impossible : ' + err.message));
     }
 
     function qa(label, value, big, other) {
