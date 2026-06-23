@@ -2,6 +2,8 @@
   'use strict';
 
   let SCHEMA = null;
+  let STEPS = [];        // tableau des éléments .section (une par étape)
+  let currentStep = 0;
 
   const $ = (sel, root) => (root || document).querySelector(sel);
   const el = (tag, cls) => {
@@ -48,16 +50,72 @@
       sectionsMap[sec].appendChild(renderQuestion(q));
     });
 
-    // Gestion des questions conditionnelles (showIf)
-    applyConditionals();
-    container.addEventListener('change', () => {
-      applyConditionals();
-      updateProgress();
-    });
-    container.addEventListener('input', updateProgress);
+    STEPS = Array.from(container.querySelectorAll('.section'));
 
+    // Conditionnelles uniquement au changement (léger) — plus de scan à chaque frappe
+    container.addEventListener('change', applyConditionals);
+    applyConditionals();
+
+    // Navigation
+    $('#prevBtn').addEventListener('click', () => goToStep(currentStep - 1));
+    $('#nextBtn').addEventListener('click', () => {
+      if (validateStep(currentStep)) goToStep(currentStep + 1);
+    });
     $('#surveyForm').addEventListener('submit', onSubmit);
-    updateProgress();
+
+    goToStep(0);
+  }
+
+  function goToStep(index) {
+    if (index < 0 || index >= STEPS.length) return;
+    currentStep = index;
+    STEPS.forEach((s, i) => s.classList.toggle('is-hidden', i !== index));
+
+    const isLast = index === STEPS.length - 1;
+    $('#prevBtn').hidden = index === 0;
+    $('#nextBtn').hidden = isLast;
+    $('#submitBtn').hidden = !isLast;
+
+    // Progression basée sur l'étape (rapide)
+    const pct = Math.round(((index + 1) / STEPS.length) * 100);
+    $('#progressBar').style.width = pct + '%';
+    $('#stepIndicator').textContent =
+      'Étape ' + (index + 1) + ' sur ' + STEPS.length;
+
+    $('#formError').hidden = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Valide les questions obligatoires de l'étape courante uniquement
+  function validateStep(index) {
+    const section = STEPS[index];
+    const errBox = $('#formError');
+    errBox.hidden = true;
+    section.querySelectorAll('.q.invalid').forEach((q) => q.classList.remove('invalid'));
+
+    const answers = collectAnswers();
+    const missing = SCHEMA.questions.filter((q) => {
+      if (!q.required) return false;
+      const qEl = section.querySelector('.q[data-qid="' + q.id + '"]');
+      if (!qEl) return false; // question d'une autre étape
+      if (qEl.style.display === 'none') return false; // cachée par showIf
+      const v = answers[q.id];
+      return v === undefined || v === null || (Array.isArray(v) && !v.length) || v === '';
+    });
+
+    if (missing.length) {
+      missing.forEach((q) => {
+        const qEl = section.querySelector('.q[data-qid="' + q.id + '"]');
+        if (qEl) qEl.classList.add('invalid');
+      });
+      errBox.textContent =
+        'Merci de répondre aux questions obligatoires (marquées d\'une *).';
+      errBox.hidden = false;
+      const first = section.querySelector('.q.invalid');
+      if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+    return true;
   }
 
   function renderQuestion(q) {
@@ -203,48 +261,13 @@
     return answers;
   }
 
-  function updateProgress() {
-    const total = SCHEMA.questions.filter((q) => {
-      const qEl = document.querySelector('.q[data-qid="' + q.id + '"]');
-      return qEl && qEl.style.display !== 'none';
-    }).length;
-    const answers = collectAnswers();
-    const done = Object.keys(answers).filter((k) => !k.endsWith('_other')).length;
-    const pct = total ? Math.min(100, Math.round((done / total) * 100)) : 0;
-    $('#progressBar').style.width = pct + '%';
-  }
-
   function onSubmit(e) {
     e.preventDefault();
-    const errBox = $('#formError');
-    errBox.hidden = true;
-    document.querySelectorAll('.q.invalid').forEach((q) => q.classList.remove('invalid'));
+    // Valide la dernière étape avant l'envoi
+    if (!validateStep(currentStep)) return;
 
     const answers = collectAnswers();
-
-    // Validation client des questions obligatoires
-    const missing = SCHEMA.questions.filter((q) => {
-      if (!q.required) return false;
-      const qEl = document.querySelector('.q[data-qid="' + q.id + '"]');
-      if (qEl && qEl.style.display === 'none') return false;
-      const v = answers[q.id];
-      return v === undefined || v === null || (Array.isArray(v) && !v.length) || v === '';
-    });
-
-    if (missing.length) {
-      missing.forEach((q) => {
-        const qEl = document.querySelector('.q[data-qid="' + q.id + '"]');
-        if (qEl) qEl.classList.add('invalid');
-      });
-      errBox.textContent =
-        'Merci de répondre aux questions obligatoires (marquées d\'une *).';
-      errBox.hidden = false;
-      missing[0] &&
-        document
-          .querySelector('.q[data-qid="' + missing[0].id + '"]')
-          .scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
+    const errBox = $('#formError');
 
     const btn = $('#submitBtn');
     btn.disabled = true;

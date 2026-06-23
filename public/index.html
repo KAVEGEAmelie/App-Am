@@ -14,6 +14,7 @@
       <h1 id="form-title">Chargement…</h1>
       <p id="form-subtitle" class="subtitle"></p>
       <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="step-indicator" id="stepIndicator"></div>
     </header>
 
     <form id="surveyForm" novalidate>
@@ -21,9 +22,13 @@
 
       <div id="formError" class="form-error" hidden></div>
 
-      <button type="submit" class="submit-btn" id="submitBtn">
-        Envoyer mes réponses 🚀
-      </button>
+      <div class="form-nav" id="formNav">
+        <button type="button" class="nav-btn back" id="prevBtn">← Précédent</button>
+        <button type="button" class="nav-btn next" id="nextBtn">Suivant →</button>
+        <button type="submit" class="submit-btn" id="submitBtn" hidden>
+          Envoyer mes réponses 🚀
+        </button>
+      </div>
       <p class="privacy">Tes réponses sont confidentielles et servent uniquement à améliorer l'app.</p>
     </form>
 
